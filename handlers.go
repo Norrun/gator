@@ -48,3 +48,7 @@ func handlerRegister(s *state, cmd command) error {
 	fmt.Println(usr)
 	return nil
 }
+
+func handlerReset(s *state, _ command) error {
+	return s.db.Reset(context.Background())
+}

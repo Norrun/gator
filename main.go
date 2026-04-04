@@ -13,13 +13,12 @@ import (
 )
 
 func main() {
-	conf := config.Read()
-	db, err := sql.Open("postgres", conf.DbURL)
-	queries := database.New(db)
-	stt := state{queries, &conf}
-	cmds := commands{make(map[string]func(*state, command) error)}
-	cmds.register("login", handlerLogin)
-	cmds.register("register", handlerRegister)
+	stt, err := loadState()
+	if err != nil {
+		println(err.Error())
+		os.Exit(1)
+	}
+	cmds := registerCommands()
 	args := os.Args
 	if len(args) < 2 {
 		fmt.Println("expected a command")
@@ -32,4 +31,23 @@ func main() {
 		os.Exit(1)
 	}
 
+}
+
+func loadState() (state, error) {
+	conf := config.Read()
+	db, err := sql.Open("postgres", conf.DbURL)
+	if err != nil {
+		return state{}, err
+	}
+	queries := database.New(db)
+	stt := state{queries, &conf}
+	return stt, nil
+}
+
+func registerCommands() commands {
+	cmds := commands{make(map[string]func(*state, command) error)}
+	cmds.register("login", handlerLogin)
+	cmds.register("register", handlerRegister)
+	cmds.register("reset", handlerReset)
+	return cmds
 }
