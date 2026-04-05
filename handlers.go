@@ -69,11 +69,32 @@ func handlerUsers(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAgg(s *state, _ command) error {
+func handlerAgg(_ *state, _ command) error {
 	feed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
 	if err != nil {
 		return err
 	}
 	fmt.Println(*feed)
+	return nil
+}
+
+func handlerAddFeed(s *state, cmd command) error {
+	if len(cmd.args) != 2 {
+		return fmt.Errorf("the addfeed command expects 2 arguments name and url")
+	}
+	name := cmd.args[0]
+	url := cmd.args[1]
+	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+	_, err = s.db.AddFeed(context.Background(), database.AddFeedParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		Name:      name,
+		Url:       url,
+		UserID:    user.ID,
+	})
 	return nil
 }

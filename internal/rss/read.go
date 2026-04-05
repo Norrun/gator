@@ -34,7 +34,7 @@ func FetchFeed(ctx context.Context, feedURL string) (*RSSFeed, error) {
 }
 
 func fixFeedText(feed *RSSFeed) {
-	unescaper := helpers.NewModifyer(html.UnescapeString)
+	unescaper := helpers.ToTakePointer(html.UnescapeString)
 	unescaper(&feed.Channel.Title)
 	unescaper(&feed.Channel.Description)
 	for i := 0; i < len(feed.Channel.Items); i++ {
