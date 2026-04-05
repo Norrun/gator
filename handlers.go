@@ -6,6 +6,7 @@ import (
 	"time"
 
 	"github.com/Norrun/gator/internal/database"
+	"github.com/Norrun/gator/internal/rss"
 	"github.com/google/uuid"
 )
 
@@ -65,5 +66,14 @@ func handlerUsers(s *state, cmd command) error {
 		}
 		fmt.Printf("* %s\n", user.Name)
 	}
+	return nil
+}
+
+func handlerAgg(s *state, _ command) error {
+	feed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+	if err != nil {
+		return err
+	}
+	fmt.Println(*feed)
 	return nil
 }

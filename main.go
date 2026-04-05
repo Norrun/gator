@@ -18,7 +18,9 @@ func main() {
 		println(err.Error())
 		os.Exit(1)
 	}
+
 	cmds := registerCommands()
+
 	args := os.Args
 	if len(args) < 2 {
 		fmt.Println("expected a command")
@@ -50,5 +52,6 @@ func registerCommands() commands {
 	cmds.register("register", handlerRegister)
 	cmds.register("reset", handlerReset)
 	cmds.register("users", handlerUsers)
+	cmds.register("agg", handlerAgg)
 	return cmds
 }
