@@ -10,6 +10,7 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/lib/pq"
 )
 
 const createUser = `-- name: CreateUser :one
@@ -70,6 +71,39 @@ SELECT id, created_at, updated_at, name FROM users
 
 func (q *Queries) GetUsers(ctx context.Context) ([]User, error) {
 	rows, err := q.db.QueryContext(ctx, getUsers)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	var items []User
+	for rows.Next() {
+		var i User
+		if err := rows.Scan(
+			&i.ID,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.Name,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const getUsersByIDs = `-- name: GetUsersByIDs :many
+SELECT id, created_at, updated_at, name FROM users
+WHERE id IN ($1::UUID[])
+`
+
+func (q *Queries) GetUsersByIDs(ctx context.Context, dollar_1 []uuid.UUID) ([]User, error) {
+	rows, err := q.db.QueryContext(ctx, getUsersByIDs, pq.Array(dollar_1))
 	if err != nil {
 		return nil, err
 	}

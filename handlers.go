@@ -98,3 +98,16 @@ func handlerAddFeed(s *state, cmd command) error {
 	})
 	return nil
 }
+
+func handlerFeeds(s *state, _ command) error {
+	feeds, err := s.db.GetFeeds(context.Background())
+	if err != nil {
+		return err
+	}
+	for _, v := range feeds {
+		fmt.Println(v.Name)
+		fmt.Println(v.Url)
+		fmt.Println(v.UserName)
+	}
+	return nil
+}
