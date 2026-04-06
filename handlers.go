@@ -16,7 +16,7 @@ func handlerLogin(s *state, cmd command) error {
 		return fmt.Errorf("the login handler expects a single argument, the username.")
 	}
 	username := cmd.args[0]
-	_, err := s.db.GetUser(context.Background(), username)
+	_, err := s.db.GetUserByName(context.Background(), username)
 	if err != nil {
 		return fmt.Errorf("User %s was not found", username)
 	}
@@ -84,17 +84,24 @@ func handlerAddFeed(s *state, cmd command) error {
 	}
 	name := cmd.args[0]
 	url := cmd.args[1]
-	user, err := s.db.GetUser(context.Background(), s.config.CurrentUserName)
+	user, err := s.db.GetUserByName(context.Background(), s.config.CurrentUserName)
 	if err != nil {
 		return err
 	}
-	_, err = s.db.AddFeed(context.Background(), database.AddFeedParams{
+	feed, err := s.db.AddFeed(context.Background(), database.AddFeedParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
 		UpdatedAt: time.Now(),
 		Name:      name,
 		Url:       url,
 		UserID:    user.ID,
+	})
+	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
 	})
 	return nil
 }
@@ -108,6 +115,48 @@ func handlerFeeds(s *state, _ command) error {
 		fmt.Println(v.Name)
 		fmt.Println(v.Url)
 		fmt.Println(v.UserName)
+	}
+	return nil
+}
+
+func handlerFollow(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return fmt.Errorf("the follow command expects a single argument, feed url.")
+	}
+	url := cmd.args[0]
+
+	user, err := s.db.GetUserByName(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+	feed, err := s.db.GetFeedByURL(context.Background(), url)
+	if err != nil {
+		return err
+	}
+
+	feedFollowRow, err := s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
+		ID:        uuid.New(),
+		CreatedAt: time.Now(),
+		UpdatedAt: time.Now(),
+		UserID:    user.ID,
+		FeedID:    feed.ID,
+	})
+	fmt.Println(feedFollowRow.FeedName)
+	fmt.Println(feedFollowRow.UserName)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func handlerFollowing(s *state, _ command) error {
+	following, err := s.db.GetFeedFollowsForUser(context.Background(), s.config.CurrentUserName)
+	if err != nil {
+		return err
+	}
+	for _, v := range following {
+		fmt.Println(v.FeedName)
 	}
 	return nil
 }
