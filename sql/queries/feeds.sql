@@ -18,3 +18,14 @@ INNER JOIN feeds ON users_feeds.feed_id = feeds.id;
 -- name: GetFeedByURL :one
 SELECT * FROM feeds
 WHERE url = $1;
+
+-- name: MarkFeedFetched :one
+UPDATE feeds
+SET updated_at = $2, last_fetched_at = $2
+WHERE id = $1
+RETURNING *;
+
+-- name: GetNextFeedToFetch :one
+SELECT * FROM feeds
+ORDER BY last_fetched_at ASC NULLS FIRST
+LIMIT 1;

@@ -121,7 +121,7 @@ func (q *Queries) GetFeedFollowsForUser(ctx context.Context, name string) ([]Get
 
 const removeUserFollow = `-- name: RemoveUserFollow :exec
 DELETE FROM users_feeds
-where user_id = $1 and feed_id = $2
+WHERE user_id = $1 AND feed_id = $2
 `
 
 type RemoveUserFollowParams struct {

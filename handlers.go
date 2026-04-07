@@ -3,10 +3,10 @@ package main
 import (
 	"context"
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/Norrun/gator/internal/database"
-	"github.com/Norrun/gator/internal/rss"
 	"github.com/google/uuid"
 )
 
@@ -69,13 +69,24 @@ func handlerUsers(s *state, cmd command) error {
 	return nil
 }
 
-func handlerAgg(_ *state, _ command) error {
-	feed, err := rss.FetchFeed(context.Background(), "https://www.wagslane.dev/index.xml")
+func handlerAgg(s *state, cmd command) error {
+	if len(cmd.args) == 0 {
+		return fmt.Errorf("need at least one time argument")
+	}
+	durations := strings.Join(cmd.args, "")
+	duration, err := time.ParseDuration(durations)
 	if err != nil {
 		return err
 	}
-	fmt.Println(*feed)
-	return nil
+	ticker := time.NewTicker(duration)
+	for ; ; <-ticker.C {
+
+		err := scrapeFeeds(s)
+		if err != nil {
+			fmt.Println(err.Error())
+		}
+	}
+
 }
 
 func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {

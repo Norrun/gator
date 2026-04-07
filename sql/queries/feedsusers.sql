@@ -25,5 +25,5 @@ FROM inserted_feed_follow
 
 -- name: RemoveUserFollow :exec
 DELETE FROM users_feeds
-WHERE user_id = $1 AND feed_id = $1;
+WHERE user_id = $1 AND feed_id = $2;
 
