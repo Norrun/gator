@@ -78,16 +78,23 @@ func handlerAgg(_ *state, _ command) error {
 	return nil
 }
 
-func handlerAddFeed(s *state, cmd command) error {
+func decoratorLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+	return func(s *state, c command) error {
+		user, err := s.db.GetUserByName(context.Background(), s.config.CurrentUserName)
+		if err != nil {
+			return err
+
+		}
+		return handler(s, c, user)
+	}
+}
+
+func handlerAddFeed(s *state, cmd command, user database.User) error {
 	if len(cmd.args) != 2 {
 		return fmt.Errorf("the addfeed command expects 2 arguments name and url")
 	}
 	name := cmd.args[0]
 	url := cmd.args[1]
-	user, err := s.db.GetUserByName(context.Background(), s.config.CurrentUserName)
-	if err != nil {
-		return err
-	}
 	feed, err := s.db.AddFeed(context.Background(), database.AddFeedParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -96,6 +103,9 @@ func handlerAddFeed(s *state, cmd command) error {
 		Url:       url,
 		UserID:    user.ID,
 	})
+	if err != nil {
+		return err
+	}
 	_, err = s.db.CreateFeedFollow(context.Background(), database.CreateFeedFollowParams{
 		ID:        uuid.New(),
 		CreatedAt: time.Now(),
@@ -103,6 +113,9 @@ func handlerAddFeed(s *state, cmd command) error {
 		UserID:    user.ID,
 		FeedID:    feed.ID,
 	})
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
@@ -119,16 +132,12 @@ func handlerFeeds(s *state, _ command) error {
 	return nil
 }
 
-func handlerFollow(s *state, cmd command) error {
+func handlerFollow(s *state, cmd command, user database.User) error {
 	if len(cmd.args) == 0 {
 		return fmt.Errorf("the follow command expects a single argument, feed url.")
 	}
 	url := cmd.args[0]
 
-	user, err := s.db.GetUserByName(context.Background(), s.config.CurrentUserName)
-	if err != nil {
-		return err
-	}
 	feed, err := s.db.GetFeedByURL(context.Background(), url)
 	if err != nil {
 		return err
@@ -141,16 +150,16 @@ func handlerFollow(s *state, cmd command) error {
 		UserID:    user.ID,
 		FeedID:    feed.ID,
 	})
-	fmt.Println(feedFollowRow.FeedName)
-	fmt.Println(feedFollowRow.UserName)
 	if err != nil {
 		return err
 	}
+	fmt.Println(feedFollowRow.FeedName)
+	fmt.Println(feedFollowRow.UserName)
 
 	return nil
 }
 
-func handlerFollowing(s *state, _ command) error {
+func handlerFollowing(s *state, _ command, _ database.User) error {
 	following, err := s.db.GetFeedFollowsForUser(context.Background(), s.config.CurrentUserName)
 	if err != nil {
 		return err
