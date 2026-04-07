@@ -78,7 +78,7 @@ func handlerAgg(_ *state, _ command) error {
 	return nil
 }
 
-func decoratorLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
+func middlewareLoggedIn(handler func(s *state, cmd command, user database.User) error) func(*state, command) error {
 	return func(s *state, c command) error {
 		user, err := s.db.GetUserByName(context.Background(), s.config.CurrentUserName)
 		if err != nil {
@@ -168,4 +168,20 @@ func handlerFollowing(s *state, _ command, _ database.User) error {
 		fmt.Println(v.FeedName)
 	}
 	return nil
+}
+
+func handlerUnfollow(s *state, cmd command, user database.User) error {
+	if len(cmd.args) == 0 {
+		return fmt.Errorf("the unfollow command expects a single argument, feed url.")
+	}
+	feed, err := s.db.GetFeedByURL(context.Background(), cmd.args[0])
+	if err != nil {
+		return err
+	}
+
+	return s.db.RemoveUserFollow(context.Background(), database.RemoveUserFollowParams{
+		UserID: user.ID,
+		FeedID: feed.ID,
+	})
+
 }
