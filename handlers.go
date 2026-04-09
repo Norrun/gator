@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"strconv"
 	"strings"
 	"time"
 
@@ -195,4 +196,28 @@ func handlerUnfollow(s *state, cmd command, user database.User) error {
 		FeedID: feed.ID,
 	})
 
+}
+
+func handlerBrowse(s *state, cmd command, user database.User) error {
+	limit := 2
+	if len(cmd.args) > 0 {
+		temp, err := strconv.Atoi(cmd.args[0])
+		if err != nil {
+			return err
+		}
+		limit = temp
+	}
+	posts, err := s.db.GetPostsForUser(context.Background(), database.GetPostsForUserParams{
+		ID:    user.ID,
+		Limit: int32(limit),
+	})
+	if err != nil {
+		return err
+	}
+	for _, post := range posts {
+		fmt.Println(post.Title)
+		fmt.Println(post.Description)
+		fmt.Println(post.PublishedAt.Time.Format(time.RFC1123Z))
+	}
+	return nil
 }
