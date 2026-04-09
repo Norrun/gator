@@ -17,8 +17,8 @@ currently requiering `.gatorconfig.json` in home directory
 ```
 
 ## commands
-register <username> add new user
-login   <username> login as user
-addfeed <name> <rss url> add rss feed
-agg [frequency] check added feeds for new posts
-browse [limit] see the newest posts
+`register <username>` add new user
+`login   <username>` login as user
+`addfeed <name> <rss url>` add rss feed
+`agg <frequency>` check added feeds for new posts
+`browse [limit]` see the newest posts
