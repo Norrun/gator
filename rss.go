@@ -7,7 +7,7 @@ import (
 	"fmt"
 	"log"
 
-	//"strings"
+	"strings"
 	"time"
 
 	"github.com/Norrun/gator/internal/bt"
@@ -46,7 +46,7 @@ func scrapeFeeds(s *state) error {
 			PublishedAt: makeNullTime(item.PubDate),
 			FeedID:      feed.ID,
 		})
-		if ierr != nil {
+		if ierr != nil && strings.Contains(ierr.Error(), "duplicate key value violates unique constraint \"posts_url_key\"") == false {
 			errsum = errors.Join(errsum, ierr)
 		}
 	}

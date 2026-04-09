@@ -43,12 +43,10 @@ func SequenceNode[TOut any](f func() (TOut, error), preerr error) (TOut, error) 
 
 	return temp, err
 }
-func FallbackNode[T any](prerr error, f func() (T, error)) (T, error) {
-	var temp T
-	if prerr != nil {
-		res, err := f()
-		return res, errors.Join(prerr, err)
-	}
 
-	return temp, prerr
+type Report []error
+
+func FallbackNode[T any](prerr *Report, f func() (T, error)) (T, bool) {
+	var temp T
+	return temp, false
 }
